@@ -1,0 +1,123 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+}
+
+plugins {
+    id 'java'
+    id 'application'
+}
+
+//apply plugin: 'checkstyle'
+//apply plugin: 'signing'
+apply plugin: 'maven-publish'
+apply plugin: 'java-library'
+
+group = 'jit.optimisation'
+
+defaultTasks('clean', 'licenseFormat', 'check', 'assemble')
+
+repositories {
+    mavenCentral()
+}
+
+static def getBuildJavaVersion() {
+    def buildJavaVersion = System.getenv('BUILD_JAVA_VERSION') ?: JavaVersion.current().getMajorVersion()
+
+    if (buildJavaVersion.indexOf('.') > 0) {
+        buildJavaVersion = buildJavaVersion.substring(0, buildJavaVersion.indexOf('.'))
+    }
+
+    if (buildJavaVersion.indexOf('-') > 0) {
+        buildJavaVersion = buildJavaVersion.substring(0, buildJavaVersion.indexOf('-'))
+    }
+
+    Integer.parseInt(buildJavaVersion)
+}
+
+int buildJavaVersion = getBuildJavaVersion()
+
+compileJava {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
+
+// Disable all signing tasks
+tasks.withType(Sign).configureEach {
+    onlyIf { false }
+}
+
+configurations {
+    codegen
+    jmh
+}
+
+File generatedSrcDir = file("${buildDir}/generated-sources/java")
+
+sourceSets {
+    main {
+        java.srcDirs += generatedSrcDir
+    }
+    jmh {
+        java.srcDirs += 'src/jmh/java'
+        compileClasspath += project.sourceSets.test.compileClasspath
+        runtimeClasspath += project.sourceSets.main.compileClasspath
+    }
+}
+
+dependencies {
+    jmhAnnotationProcessor 'org.openjdk.jmh:jmh-generator-annprocess:1.37'
+    jmhImplementation 'org.openjdk.jmh:jmh-core:1.32'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.1'
+    testImplementation 'org.mockito:mockito-core:5.4.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.1'
+}
+
+test {
+    useJUnitPlatform()
+    if (buildJavaVersion >= 9) {
+        jvmArgs = [
+                "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED",
+                '--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED',
+                '--add-opens=java.base/sun.nio.ch=ALL-UNNAMED',
+                '--add-opens=java.base/java.util=ALL-UNNAMED',
+                '--enable-native-access=ALL-UNNAMED'
+        ]
+    }
+}
+
+task benchmarkJar(type: Jar) {
+    manifest {
+        attributes('Main-Class': 'org.openjdk.jmh.Main')
+    }
+    archiveClassifier = 'benchmarks'
+    from sourceSets.jmh.output
+    from sourceSets.main.output
+    from sourceSets.jmh.runtimeClasspath.collect {
+        if (it.exists()) {
+            it.isDirectory() ? it : zipTree(it)
+        }
+    }
+}
+
+tasks.withType(Test).configureEach { test ->
+    jvmArgs('--add-opens', 'java.base/java.util.zip=ALL-UNNAMED')
+    if (buildJavaVersion >= 21) {
+        jvmArgs('-XX:+EnableDynamicAgentLoading')
+    }
+    testClassesDirs = testing.suites.test.sources.output.classesDirs
+    classpath = testing.suites.test.sources.runtimeClasspath
+}
+
+artifacts {
+    archives sourcesJar, javadocJar
+}
+
+javadoc {
+}
