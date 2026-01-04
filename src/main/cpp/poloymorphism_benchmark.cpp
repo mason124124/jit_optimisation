@@ -158,17 +158,17 @@ int main() {
     Triangle triangle;
 
     // Three distributions:
-    auto mono = mostlyOneType(size, &circle, &square, 99, 1);      // mostly Circle
+    auto mono = mostlyOneType(size, &circle, &square, 100, 1);      // mostly Circle
     auto bi   = mostlyOneType(size, &circle, &square, 80, 2);      // Circle + Square
     auto poly = mixThreeTypes(size, &circle, &square, &triangle, 3); // 3 types
 
     std::puts("=== Warm-up (cache warming / steady state for CPU) ===");
-    phase("warmup monomorphic 99/1", mono, warmRounds);
+    phase("warmup monomorphic 100", mono, warmRounds);
     phase("warmup bimorphic   80/20", bi, warmRounds);
     phase("warmup polymorphic 70/20/10", poly, warmRounds);
 
     std::puts("\n=== Measure ===");
-    phase("measure monomorphic 99/1", mono, measureRounds);
+    phase("measure monomorphic 100", mono, measureRounds);
     phase("measure bimorphic   80/20", bi, measureRounds);
     phase("measure polymorphic 70/20/10", poly, measureRounds);
 

@@ -2,6 +2,7 @@
 #include <chrono>
 
 int main() {
+
     constexpr long long ITERATIONS = 10'000'000'000LL;
     constexpr long long PHASE = ITERATIONS / 2;
 

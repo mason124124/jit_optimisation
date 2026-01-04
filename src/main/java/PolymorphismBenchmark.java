@@ -155,9 +155,9 @@ public final class PolymorphismBenchmark {
     Shape square = new Square();
     Shape triangle = new Triangle();
 
-    // Phase 1: Mostly monomorphic (Circle dominates heavily).
+    // Phase 1: monomorphic (Circle dominates heavily).
     // HotSpot often devirtualizes + inlines aggressively here.
-    Shape[] mono = mostlyOneType(size, circle, square, 99, 1);
+    Shape[] mono = mostlyOneType(size, circle, square, 100, 1);
 
     // Phase 2: Bimorphic-ish (Circle still dominates, but Square appears more).
     Shape[] bi = mostlyOneType(size, circle, square, 80, 2);
@@ -168,12 +168,12 @@ public final class PolymorphismBenchmark {
     Shape[] poly = mixThreeTypes(size, circle, square, triangle, 3);
 
     System.out.println("=== Warm-up (let the JIT observe + compile) ===");
-    phase("warmup monomorphic 99/1", mono, warmRounds);
+    phase("warmup monomorphic 100", mono, warmRounds);
     phase("warmup bimorphic   80/20", bi, warmRounds);
     phase("warmup polymorphic 70/20/10", poly, warmRounds);
 
     System.out.println("\n=== Measure (steady-state-ish) ===");
-    phase("measure monomorphic 99/1", mono, measureRounds);
+    phase("measure monomorphic 100", mono, measureRounds);
     phase("measure bimorphic   80/20", bi, measureRounds);
     phase("measure polymorphic 70/20/10", poly, measureRounds);
 
