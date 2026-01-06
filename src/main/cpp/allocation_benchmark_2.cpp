@@ -5,9 +5,9 @@
 //  2) a simple pool allocator (TLAB-like bump allocation + free list)
 //
 // Build:
-//   g++ -O3 -march=native -std=c++20 alloc_bench.cpp -o alloc_bench
+//   g++ -O3 -march=native -std=c++17 allocation_benchmark.cpp -o allocation_benchmark
 // Run:
-//   ./alloc_bench
+//   ./allocation_benchmark
 //
 // Notes:
 // - This is a demonstrator. Real allocators (jemalloc/tcmalloc) are more sophisticated.
